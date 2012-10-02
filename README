@@ -12,5 +12,5 @@ Options
 z : Zoom in
 x : Zoom out
 w : wiremesh mode
-f : Toggle the wiremesh mode
+r : Reset the view 
 Use the arrow keys to rotate the object
