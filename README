@@ -1,0 +1,16 @@
+Compile
+-------
+./compile.py
+
+Viewer
+------
+./stlviewer stlfile
+
+Options
+-------
+
+z : Zoom in
+x : Zoom out
+w : wiremesh mode
+f : Toggle the wiremesh mode
+Use the arrow keys to rotate the object
