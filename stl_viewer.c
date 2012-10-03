@@ -55,7 +55,6 @@
 #define ROTATION_FACTOR 15
 
 static int wiremesh = 0;
-static float spin = 0.0;
 static GLfloat scale = DEFAULT_SCALE;
 static stl_t *stl;
 static float ortho_factor = 1.5;
@@ -73,6 +72,8 @@ float mat_specular[] = { 0.5, 0.5, 0.5, 1.0 };
 float rot_x = DEFAULT_ROTATION_X;
 float rot_y = DEFAULT_ROTATION_Y;
 float rot_z = DEFAULT_ROTATION_Z;
+
+static GLuint model;
 
 typedef struct {
 	GLfloat x;
@@ -248,17 +249,6 @@ drawTriangle(	GLfloat x1, GLfloat y1, GLfloat z1,
 void
 drawBox(void)
 {
-	GLfloat *vertices = NULL;
-
-	stl_error_t err =  stl_vertices(stl, &vertices);
-	GLuint triangle_cnt = stl_facet_cnt(stl);
-	int i = 0, base = 0;
-
-	if (err) {
-		fprintf(stderr, "Problem getting the vertex array");
-		exit(1);
-	}
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	glPushMatrix();
@@ -283,18 +273,9 @@ drawBox(void)
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular );
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
-        glBegin(GL_TRIANGLES);
-	for (i = 0; i < triangle_cnt; i++) {
-		base = i*9;
-		drawTriangle(vertices[base], vertices[base + 1], vertices[base + 2],
-			     vertices[base + 3], vertices[base + 4], vertices[base + 5],
-			     vertices[base + 6], vertices[base + 7], vertices[base + 8]);
-	}
-	glEnd();
+        glCallList(model);
 
-	glPopMatrix();
-
-	spin  += 1;
+        glPopMatrix();
 
 	glFlush();
 	glutSwapBuffers();
@@ -318,6 +299,9 @@ void
 init(char *filename)
 {
 	stl_error_t err;
+	GLfloat *vertices = NULL;
+	GLuint triangle_cnt = 0;
+	int i = 0, base = 0;
 
  	stl = stl_alloc();
 	if (stl == NULL) {
@@ -333,6 +317,26 @@ init(char *filename)
 		exit(1);
 	}
 
+	err =  stl_vertices(stl, &vertices);
+	if (err) {
+		fprintf(stderr, "Problem getting the vertex array");
+		exit(1);
+	}
+
+	triangle_cnt = stl_facet_cnt(stl);
+
+        model = glGenLists(1);
+        glNewList(model, GL_COMPILE);
+        glBegin(GL_TRIANGLES);
+	for (i = 0; i < triangle_cnt; i++) {
+		base = i*9;
+		drawTriangle(vertices[base], vertices[base + 1], vertices[base + 2],
+			     vertices[base + 3], vertices[base + 4], vertices[base + 5],
+			     vertices[base + 6], vertices[base + 7], vertices[base + 8]);
+	}
+	glEnd();
+        glEndList();
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glEnable(GL_DEPTH_TEST);
 	glShadeModel(GL_SMOOTH);
@@ -343,7 +347,6 @@ init(char *filename)
 
         glEnable(GL_NORMALIZE);
 	glEnable(GL_COLOR_MATERIAL);
-
 
 	glFlush();
 }
