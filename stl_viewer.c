@@ -59,7 +59,6 @@ static float spin = 0.0;
 static GLfloat scale = DEFAULT_SCALE;
 static stl_t *stl;
 static float ortho_factor = 1.5;
-static int change_delay = 10;
 static float zoom = DEFAULT_ZOOM;
 
 float gobal_ambient_light[4] = {0.0, 0.0, 0.0, 0};
@@ -302,10 +301,9 @@ drawBox(void)
 }
 
 void
-timer(int extra)
+idle_func(void)
 {
 	glutPostRedisplay();
-	glutTimerFunc(change_delay, timer, 0);
 }
 
 
@@ -366,7 +364,7 @@ main(int argc, char **argv)
   glutSpecialFunc(keyboardSpecialFunc);
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
-  glutTimerFunc(change_delay, timer, 0);
+  glutIdleFunc(idle_func);
   init(argv[1]);
   glutMainLoop();
   return 0;             /* ANSI C requires main to return int. */
