@@ -329,10 +329,10 @@ init(char *filename)
         glNewList(model, GL_COMPILE);
         glBegin(GL_TRIANGLES);
 	for (i = 0; i < triangle_cnt; i++) {
-		base = i*9;
+		base = i*18;
 		drawTriangle(vertices[base], vertices[base + 1], vertices[base + 2],
-			     vertices[base + 3], vertices[base + 4], vertices[base + 5],
-			     vertices[base + 6], vertices[base + 7], vertices[base + 8]);
+			     vertices[base + 6], vertices[base + 7], vertices[base + 8],
+			     vertices[base + 12], vertices[base + 13], vertices[base + 14]);
 	}
 	glEnd();
         glEndList();

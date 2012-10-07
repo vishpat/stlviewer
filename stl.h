@@ -30,30 +30,12 @@
 
 #define STL_DBG printf
 
-#ifdef _Linux_
-#include <GL/gl.h>
-#endif
-
-#ifdef _Darwin_
-#include <OpenGL/gl.h>
-#endif
-
-#ifdef _OPENGL_
-typedef GLfloat STLfloat;
-typedef GLfloat STLFloat32;
-
-typedef GLubyte STLuint8;
-typedef GLuint STLuint32;
-typedef GLuint STLuint;
-
-#else
-typedef float STLfloat;
+typedef float STLFloat;
 typedef float STLFloat32;
 
 typedef unsigned char STLuint8;
 typedef unsigned int STLuint32;
 typedef unsigned int STLuint;
-#endif
 
 typedef struct stl_s stl_t;
 
@@ -71,17 +53,17 @@ stl_t* stl_alloc(void);
 stl_error_t stl_load(stl_t *, char *);
 void stl_free(stl_t *);
 
-STLfloat stl_max_x(stl_t *);
-STLfloat stl_min_x(stl_t *);
-STLfloat stl_max_y(stl_t *);
-STLfloat stl_min_y(stl_t *);
-STLfloat stl_max_z(stl_t *);
-STLfloat stl_min_z(stl_t *);
+STLFloat stl_max_x(stl_t *);
+STLFloat stl_min_x(stl_t *);
+STLFloat stl_max_y(stl_t *);
+STLFloat stl_min_y(stl_t *);
+STLFloat stl_max_z(stl_t *);
+STLFloat stl_min_z(stl_t *);
 
 STLuint stl_facet_cnt(stl_t *);
 STLuint stl_vertex_cnt(stl_t *);
 
-stl_error_t stl_vertices(stl_t *, STLfloat **points);
+stl_error_t stl_vertices(stl_t *, STLFloat **points);
 
 int stl_error_lineno(stl_t *);
 #endif

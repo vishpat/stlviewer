@@ -35,6 +35,7 @@
 #include <fcntl.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "stl.h"
 
@@ -90,6 +91,15 @@ typedef enum stl_state {
         STL_STATE_VERTEX
 } stl_state_t; 
 
+typedef struct {
+	STLFloat x;
+	STLFloat y;
+	STLFloat z;
+} vector_t;
+
+typedef vector_t vertex_t;
+typedef vector_t normal_t;
+
 struct stl_s {
         int magic;
         char *file;
@@ -99,13 +109,13 @@ struct stl_s {
         STLuint32 facet_cnt;
         STLuint vertex_cnt;
 
-        STLfloat *vertices;
-        STLfloat min_x;
-        STLfloat max_x;
-        STLfloat min_y;
-        STLfloat max_y;
-        STLfloat min_z;
-        STLfloat max_z;
+        STLFloat *vertices;
+        STLFloat min_x;
+        STLFloat max_x;
+        STLFloat min_y;
+        STLFloat max_y;
+        STLFloat min_z;
+        STLFloat max_z;
 
         int lineno;
         int loaded;
@@ -272,6 +282,61 @@ err:
         return ret;
 }
 
+static void 
+calculate_triangle_normal(vertex_t v1, vertex_t v2, vertex_t v3, normal_t *normal) 
+{
+	vector_t U;
+	vector_t V;
+        STLFloat length;
+
+	U.x = v2.x - v1.x;
+	U.y = v2.y - v1.y;
+	U.z = v2.z - v1.z;
+
+	V.x = v3.x - v1.x;
+	V.y = v3.y - v1.y;
+	V.z = v3.z - v1.z;
+
+	normal->x = U.y * V.z - U.z * V.y;
+	normal->y = U.z * V.x - U.x * V.z;
+	normal->z = U.x * V.y - U.y * V.x;
+
+	length = normal->x * normal->x + normal->y * normal->y + normal->z * normal->z;
+	length = sqrt(length);
+	
+	normal->x = normal->x / length;
+	normal->y = normal->y / length;
+	normal->z = normal->z / length;
+}
+
+static void
+stl_fill_vertex_normals(stl_t *stl) 
+{
+        STLuint vertex_cnt = stl->vertex_cnt;
+        STLuint triangle_cnt = vertex_cnt / 3;
+        STLuint idx = 0;
+        vertex_t *v1, *v2, *v3;
+        normal_t normal, *n1, *n2, *n3;
+        STLFloat *vertices = stl->vertices;
+
+        for (idx = 0; idx < triangle_cnt; idx += 18) {
+                
+                v1 = (vertex_t *)&vertices[idx + 0];
+                n1 = (normal_t *)&vertices[idx + 3];
+
+                v2 = (vertex_t *)&vertices[idx + 6];
+                n2 = (normal_t *)&vertices[idx + 9];
+
+                v3 = (vertex_t *)&vertices[idx + 12];
+                n3 = (normal_t *)&vertices[idx + 15];
+
+                calculate_triangle_normal(*v1, *v2, *v3, &normal);       
+                
+                *n1 = normal;
+                *n2 = normal;
+                *n3 = normal;
+        }
+}
 
 static stl_error_t
 stl_get_vertices(stl_t *stl) 
@@ -281,7 +346,7 @@ stl_get_vertices(stl_t *stl)
         char *vx = NULL;
         char *vy = NULL;
         char *vz = NULL;
-        STLfloat fvx, fvy, fvz;
+        STLFloat fvx, fvy, fvz;
         stl_token_t token;
         int vertex_idx = 0;
         int error = 1;
@@ -293,8 +358,8 @@ stl_get_vertices(stl_t *stl)
 
         char buffer[256];
 
-	stl->min_x = stl->min_y = stl->min_z = FLT_MAX;
-	stl->max_x = stl->max_y = stl->max_z = FLT_MIN;
+        stl->min_x = stl->min_y = stl->min_z = FLT_MAX;
+        stl->max_x = stl->max_y = stl->max_z = FLT_MIN;
 
         while (fgets(buffer, sizeof(buffer), fp) != NULL) {
                
@@ -328,7 +393,7 @@ stl_get_vertices(stl_t *stl)
                         if (fvx > stl->max_x) {
                                 stl->max_x = fvx;
                         }
-                        
+ 
                         stl->vertices[vertex_idx++] = fvx;
 
                         vy = strtok(NULL, " ");
@@ -365,7 +430,8 @@ stl_get_vertices(stl_t *stl)
                                 stl->max_z = fvz;
                         }
  
-                        stl->vertices[vertex_idx++] = fvz;
+                       stl->vertices[vertex_idx++] = fvz;
+                       vertex_idx += 3;
                 }
         }
 
@@ -435,7 +501,7 @@ stl_load_bin_file(stl_t *stl)
 	
 	int expected_vertex_cnt = stl->facet_cnt*3;
 
-        stl->vertices = (STLfloat *)malloc(expected_vertex_cnt * 3 * sizeof(STLfloat));
+        stl->vertices = (STLFloat *)malloc(expected_vertex_cnt * 6 * sizeof(STLFloat));
 	if (stl->vertices == NULL) {
 		err = STL_ERR_MEM;
 		goto done;
@@ -469,6 +535,8 @@ stl_load_bin_file(stl_t *stl)
 			stl->vertices[vertex_idx++] = vec.x;
 			stl->vertices[vertex_idx++] = vec.y;
 			stl->vertices[vertex_idx++] = vec.z;
+                        
+                        vertex_idx += 3;
 			
 			if (vec.x < stl->min_x) stl->min_x = vec.x;
 			if (vec.x > stl->max_x) stl->max_x = vec.x;
@@ -486,7 +554,9 @@ stl_load_bin_file(stl_t *stl)
 			goto done;
 		} 	
 	}	
-	
+
+        stl_fill_vertex_normals(stl);
+
 	stl->loaded = 1;	
 done:
 	fclose(fp);
@@ -502,7 +572,7 @@ stl_load_txt_file(stl_t *stl)
                 return err;
         }
 
-        stl->vertices = (STLfloat *)malloc(3 * stl->vertex_cnt * sizeof(STLfloat));
+        stl->vertices = (STLFloat *)malloc(6 * stl->vertex_cnt * sizeof(STLFloat));
 
         if (stl->vertices == NULL) {
                 return STL_ERR_MEM;
@@ -511,6 +581,8 @@ stl_load_txt_file(stl_t *stl)
         if ((err = stl_get_vertices(stl)) != STL_ERR_NONE) {
                 return err;
         }
+
+        stl_fill_vertex_normals(stl);
 
         stl->loaded = 1;
 
@@ -541,37 +613,37 @@ stl_load(stl_t *stl, char *filename)
 }
         
 
-STLfloat 
+STLFloat 
 stl_min_x(stl_t *stl)
 {
         return stl->min_x;
 }
 
-STLfloat 
+STLFloat 
 stl_max_x(stl_t *stl)
 {
         return stl->max_x;
 }
 
-STLfloat 
+STLFloat 
 stl_min_y(stl_t *stl)
 {
         return stl->min_y;
 }
 
-STLfloat 
+STLFloat 
 stl_max_y(stl_t *stl)
 {
         return stl->max_y;
 }
 
-STLfloat 
+STLFloat 
 stl_min_z(stl_t *stl)
 {
         return stl->min_z;
 }
 
-STLfloat 
+STLFloat 
 stl_max_z(stl_t *stl)
 {
         return stl->max_z;
@@ -590,7 +662,7 @@ stl_vertex_cnt(stl_t *stl)
 }
 
 stl_error_t
-stl_vertices(stl_t *stl, STLfloat **points)
+stl_vertices(stl_t *stl, STLFloat **points)
 {
 
         if (stl->loaded == 0) {
