@@ -235,7 +235,7 @@ drawTriangle(	GLfloat x1, GLfloat y1, GLfloat z1,
 
 	normal.x = U.y * V.z - U.z * V.y;
 	normal.y = U.z * V.x - U.x * V.z;
-	normal.x = U.x * V.y - U.y * V.x;
+	normal.z = U.x * V.y - U.y * V.x;
 
 	length = normal.x * normal.x + normal.y * normal.y + normal.z * normal.z;
 	length = sqrt(length);
