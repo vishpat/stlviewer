@@ -1,27 +1,27 @@
 /*
- * Copyright (c) 2012, Vishal Patil 
+ * Copyright (c) 2012, Vishal Patil
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without 
- * modification, are permitted provided that the following conditions 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
  * are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, 
+ * 1. Redistributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  *
- * 2. Redistributions in binary form must reproduce the above copyright notice, 
- *    this list of conditions and the following disclaimer in the documentation 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
@@ -75,7 +75,7 @@ struct {
         {STL_STR_FACET_END, STL_TOKEN_FACET_END},
         {STL_STR_LOOP_START, STL_TOKEN_LOOP_START},
         {STL_STR_LOOP_END, STL_TOKEN_LOOP_END},
-        {STL_STR_VERTEX, STL_TOKEN_VERTEX}, 
+        {STL_STR_VERTEX, STL_TOKEN_VERTEX},
 };
 
 #define STL_TOTAL_TOKENS (sizeof(stl_token_map)/sizeof(stl_token_map[0]))
@@ -89,7 +89,7 @@ typedef enum stl_state {
         STL_STATE_LOOP_START,
         STL_STATE_LOOP_END,
         STL_STATE_VERTEX
-} stl_state_t; 
+} stl_state_t;
 
 typedef struct {
 	STLFloat x;
@@ -121,12 +121,12 @@ struct stl_s {
         int loaded;
 };
 
-stl_t * 
-stl_alloc(void) 
+stl_t *
+stl_alloc(void)
 {
         stl_t *stl = NULL;
         stl = (stl_t *)malloc(sizeof(*stl));
-        
+
         if (stl == NULL) {
                 return NULL;
         }
@@ -136,11 +136,11 @@ stl_alloc(void)
         return stl;
 }
 
-void 
-stl_free(stl_t *stl) 
+void
+stl_free(stl_t *stl)
 {
         if (stl) {
-                
+
                 assert(stl->magic == STL_MAGIC);
 
                 if (stl->magic != STL_MAGIC) {
@@ -163,17 +163,17 @@ stl_str_token(const char* str)
         int i = 0;
 
         for (i = 0; i < STL_TOTAL_TOKENS; i++) {
-                
+
                 if (strcasecmp(stl_token_map[i].str, str) == 0) {
-                        token = stl_token_map[i].token; 
+                        token = stl_token_map[i].token;
                         break;
                 }
         }
 
         return token;
 }
-        
-static stl_error_t 
+
+static stl_error_t
 stl_parse_txt(stl_t *stl)
 {
         FILE *fp = fopen(stl->file, "r");
@@ -190,7 +190,7 @@ stl_parse_txt(stl_t *stl)
         char buffer[256];
 
         while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-                
+
                 stl->lineno++;
                 str_token = strtok(buffer, " \r\n");
 
@@ -212,43 +212,43 @@ stl_parse_txt(stl_t *stl)
                         case STL_TOKEN_SOLID_START:
                                 stl->state = STL_STATE_SOLID_START;
                                 break;
-                        
+
                         case STL_TOKEN_SOLID_END:
                                 error = 0;
                                 stl->state = STL_STATE_SOLID_END;
                                 break;
-                        
+
                         case STL_TOKEN_FACET_START:
 
-                                if (stl->state != STL_STATE_SOLID_START && 
-                                    stl->state != STL_STATE_FACET_END) { 
+                                if (stl->state != STL_STATE_SOLID_START &&
+                                    stl->state != STL_STATE_FACET_END) {
                                         goto err;
-                                }       
-                                
+                                }
+
                                 stl->state = STL_STATE_FACET_START;
                                 break;
-                        
+
                         case STL_TOKEN_FACET_END:
-                                if (stl->state != STL_STATE_LOOP_END) { 
+                                if (stl->state != STL_STATE_LOOP_END) {
                                         goto err;
-                                }       
- 
+                                }
+
                                 stl->state = STL_STATE_FACET_END;
                                 stl->facet_cnt = stl->facet_cnt + 1;
                                 break;
 
                         case STL_TOKEN_LOOP_START:
 
-                                if (stl->state != STL_STATE_FACET_START) { 
+                                if (stl->state != STL_STATE_FACET_START) {
                                         goto err;
-                                }       
- 
+                                }
+
                                 stl->state = STL_STATE_LOOP_START;
                                 vertex_cnt = 0;
                                 break;
 
                         case STL_TOKEN_LOOP_END:
-                                if (stl->state != STL_STATE_VERTEX || 
+                                if (stl->state != STL_STATE_VERTEX ||
                                     vertex_cnt != 3) {
                                         goto err;
                                 }
@@ -257,7 +257,7 @@ stl_parse_txt(stl_t *stl)
                                 break;
 
                         case STL_TOKEN_VERTEX:
-                                if (stl->state != STL_STATE_VERTEX && 
+                                if (stl->state != STL_STATE_VERTEX &&
                                     stl->state != STL_STATE_LOOP_START) {
                                         goto err;
                                 }
@@ -276,14 +276,14 @@ stl_parse_txt(stl_t *stl)
 
 err:
         ret = error ? STL_ERR_FILE_FORMAT : STL_ERR_NONE;
-        
+
         fclose(fp);
 
         return ret;
 }
 
-static void 
-calculate_triangle_normal(vertex_t v1, vertex_t v2, vertex_t v3, normal_t *normal) 
+static void
+calculate_triangle_normal(vertex_t v1, vertex_t v2, vertex_t v3, normal_t *normal)
 {
 	vector_t U;
 	vector_t V;
@@ -303,24 +303,26 @@ calculate_triangle_normal(vertex_t v1, vertex_t v2, vertex_t v3, normal_t *norma
 
 	length = normal->x * normal->x + normal->y * normal->y + normal->z * normal->z;
 	length = sqrt(length);
-	
+
 	normal->x = normal->x / length;
 	normal->y = normal->y / length;
 	normal->z = normal->z / length;
 }
 
 static void
-stl_fill_vertex_normals(stl_t *stl) 
+stl_fill_vertex_normals(stl_t *stl)
 {
         STLuint vertex_cnt = stl->vertex_cnt;
         STLuint triangle_cnt = vertex_cnt / 3;
-        STLuint idx = 0;
+        STLuint i, idx = 0;
         vertex_t *v1, *v2, *v3;
         normal_t normal, *n1, *n2, *n3;
         STLFloat *vertices = stl->vertices;
 
-        for (idx = 0; idx < triangle_cnt; idx += 18) {
-                
+        for (i = 0; i < triangle_cnt; i++) {
+
+                idx = i*18;
+
                 v1 = (vertex_t *)&vertices[idx + 0];
                 n1 = (normal_t *)&vertices[idx + 3];
 
@@ -330,8 +332,8 @@ stl_fill_vertex_normals(stl_t *stl)
                 v3 = (vertex_t *)&vertices[idx + 12];
                 n3 = (normal_t *)&vertices[idx + 15];
 
-                calculate_triangle_normal(*v1, *v2, *v3, &normal);       
-                
+                calculate_triangle_normal(*v1, *v2, *v3, &normal);
+
                 *n1 = normal;
                 *n2 = normal;
                 *n3 = normal;
@@ -339,7 +341,7 @@ stl_fill_vertex_normals(stl_t *stl)
 }
 
 static stl_error_t
-stl_get_vertices(stl_t *stl) 
+stl_get_vertices(stl_t *stl)
 {
         FILE *fp = fopen(stl->file, "r");
         char *str_token = NULL;
@@ -362,7 +364,7 @@ stl_get_vertices(stl_t *stl)
         stl->max_x = stl->max_y = stl->max_z = FLT_MIN;
 
         while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-               
+
                 str_token = strtok(buffer, " \r\n");
 
                 /* Empty line */
@@ -381,7 +383,7 @@ stl_get_vertices(stl_t *stl)
                         vx = strtok(NULL, " ");
 
                         if (vx == NULL) {
-                                goto err; 
+                                goto err;
                         }
 
                         fvx = strtof(vx, NULL);
@@ -389,11 +391,11 @@ stl_get_vertices(stl_t *stl)
                         if (fvx < stl->min_x) {
                                 stl->min_x = fvx;
                         }
-                        
+
                         if (fvx > stl->max_x) {
                                 stl->max_x = fvx;
                         }
- 
+
                         stl->vertices[vertex_idx++] = fvx;
 
                         vy = strtok(NULL, " ");
@@ -407,11 +409,11 @@ stl_get_vertices(stl_t *stl)
                         if (fvy < stl->min_y) {
                                 stl->min_y = fvy;
                         }
-                        
+
                         if (fvy > stl->max_y) {
                                 stl->max_y = fvy;
                         }
- 
+
                         stl->vertices[vertex_idx++] = fvy;
 
                         vz = strtok(NULL, " ");
@@ -425,11 +427,11 @@ stl_get_vertices(stl_t *stl)
                         if (fvz < stl->min_z) {
                                 stl->min_z = fvz;
                         }
-                        
+
                         if (fvz > stl->max_z) {
                                 stl->max_z = fvz;
                         }
- 
+
                        stl->vertices[vertex_idx++] = fvz;
                        vertex_idx += 3;
                 }
@@ -439,9 +441,9 @@ stl_get_vertices(stl_t *stl)
 
 err:
         ret = error ? STL_ERR_FILE_FORMAT : STL_ERR_NONE;
- 
+
         fclose(fp);
-        
+
         return ret;
 }
 
@@ -453,7 +455,7 @@ stl_get_filetype(char *filename)
 	int fd = open(filename, O_RDONLY);
       	if (fd == -1) {
 		return STL_FILE_TYPE_INVALID;
-	} 
+	}
 
 	STLuint8 c;
 	int bytes_read = -1;
@@ -465,7 +467,7 @@ stl_get_filetype(char *filename)
 	close(fd);
 
 	return type;
-	
+
 }
 
 typedef struct {
@@ -474,7 +476,7 @@ typedef struct {
 	STLFloat32 z;
 } stl_vector_t;
 
-#define STL_BIN_HEADER_SIZE 80 
+#define STL_BIN_HEADER_SIZE 80
 #define STL_TRIANGLE_VERTEX_CNT 3
 
 static stl_error_t
@@ -490,15 +492,15 @@ stl_load_bin_file(stl_t *stl)
 	/* skip the stl file header */
 	if (fseek(fp, STL_BIN_HEADER_SIZE, SEEK_CUR) != 0) {
 		err = STL_ERR_FILE_FORMAT;
-		goto done;		
-	}	
+		goto done;
+	}
 
 	/* Read the the facet count */
 	if (fread(&stl->facet_cnt, sizeof(stl->facet_cnt), 1, fp) != 1) {
 		err = STL_ERR_FILE_FORMAT;
 		goto done;
-	} 
-	
+	}
+
 	int expected_vertex_cnt = stl->facet_cnt*3;
 
         stl->vertices = (STLFloat *)malloc(expected_vertex_cnt * 6 * sizeof(STLFloat));
@@ -509,22 +511,22 @@ stl_load_bin_file(stl_t *stl)
 
 	stl_vector_t vec;
         int vertex_idx = 0;
-      	int triangle_idx = 0; 
-	STLuint8 abc[2];	
+      	int triangle_idx = 0;
+	STLuint8 abc[2];
 	stl->min_x = stl->min_y = stl->min_z = FLT_MAX;
 	stl->max_x = stl->max_y = stl->max_z = FLT_MIN;
 
 	for (triangle_idx = 0; triangle_idx < stl->facet_cnt; triangle_idx++) {
-	
+
 		/* Read the normal vector */
 		if (fread(&vec, sizeof(vec), 1, fp) != 1) {
 			err = STL_ERR_FILE_FORMAT;
 			goto done;
-		} 	
-		
+		}
+
 		int idx = 0;
 		for (idx = 0; idx < STL_TRIANGLE_VERTEX_CNT; idx++) {
-			
+
 			/* Read the vertex vector */
 			if (fread(&vec, sizeof(vec), 1, fp) != 1) {
 				err = STL_ERR_FILE_FORMAT;
@@ -535,9 +537,9 @@ stl_load_bin_file(stl_t *stl)
 			stl->vertices[vertex_idx++] = vec.x;
 			stl->vertices[vertex_idx++] = vec.y;
 			stl->vertices[vertex_idx++] = vec.z;
-                        
+
                         vertex_idx += 3;
-			
+
 			if (vec.x < stl->min_x) stl->min_x = vec.x;
 			if (vec.x > stl->max_x) stl->max_x = vec.x;
 
@@ -547,17 +549,17 @@ stl_load_bin_file(stl_t *stl)
 			if (vec.z < stl->min_z) stl->min_z = vec.z;
 			if (vec.z > stl->max_z) stl->max_z = vec.z;
 		}
-		
+
 		/* Read the Attribute Byte Count */
 		if (fread(&abc, sizeof(abc), 1, fp) != 1) {
 			err = STL_ERR_FILE_FORMAT;
 			goto done;
-		} 	
-	}	
+		}
+	}
 
         stl_fill_vertex_normals(stl);
 
-	stl->loaded = 1;	
+	stl->loaded = 1;
 done:
 	fclose(fp);
  	return err;
@@ -567,7 +569,7 @@ static stl_error_t
 stl_load_txt_file(stl_t *stl)
 {
         stl_error_t err = STL_ERR_NONE;
-	
+
         if ((err = stl_parse_txt(stl)) != STL_ERR_NONE) {
                 return err;
         }
@@ -589,7 +591,7 @@ stl_load_txt_file(stl_t *stl)
 	return err;
 }
 
-stl_error_t 
+stl_error_t
 stl_load(stl_t *stl, char *filename)
 {
         stl_error_t err = STL_ERR_NONE;
@@ -611,51 +613,51 @@ stl_load(stl_t *stl, char *filename)
 
         return err;
 }
-        
 
-STLFloat 
+
+STLFloat
 stl_min_x(stl_t *stl)
 {
         return stl->min_x;
 }
 
-STLFloat 
+STLFloat
 stl_max_x(stl_t *stl)
 {
         return stl->max_x;
 }
 
-STLFloat 
+STLFloat
 stl_min_y(stl_t *stl)
 {
         return stl->min_y;
 }
 
-STLFloat 
+STLFloat
 stl_max_y(stl_t *stl)
 {
         return stl->max_y;
 }
 
-STLFloat 
+STLFloat
 stl_min_z(stl_t *stl)
 {
         return stl->min_z;
 }
 
-STLFloat 
+STLFloat
 stl_max_z(stl_t *stl)
 {
         return stl->max_z;
 }
 
-STLuint 
+STLuint
 stl_facet_cnt(stl_t *stl)
 {
         return stl->facet_cnt;
 }
 
-STLuint 
+STLuint
 stl_vertex_cnt(stl_t *stl)
 {
         return stl->vertex_cnt;
@@ -669,12 +671,12 @@ stl_vertices(stl_t *stl, STLFloat **points)
                 return STL_ERR_NOT_LOADED;
         }
 
-        *points = stl->vertices; 
+        *points = stl->vertices;
 
         return STL_ERR_NONE;
 }
 
-int 
+int
 stl_error_lineno(stl_t *stl)
 {
         return stl->lineno;
