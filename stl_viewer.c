@@ -41,6 +41,7 @@
 #endif
 
 #include "stl.h"
+#include "trackball.h"
 
 #define MAX( x, y) (x) > (y) ? (x) : (y)
 #define MIN( x, y) (x) < (y) ? (x) : (y)
@@ -54,24 +55,27 @@
 #define MAX_Z_ORTHO_FACTOR 20
 #define ROTATION_FACTOR 15
 
+static int rotating = 0;
 static int wiremesh = 0;
 static GLfloat scale = DEFAULT_SCALE;
 static stl_t *stl;
 static float ortho_factor = 1.5;
 static float zoom = DEFAULT_ZOOM;
 
-float gobal_ambient_light[4] = {0.0, 0.0, 0.0, 0};
+static int screen_width = 0;
+static int screen_height = 0;
 
-float light_ambient[4] = {0.3, 0.3, 0.3, 0.0};
-float light_diffuse[4] = {0.5, 0.5, 0.5, 1.0};
-float light_specular[4] = {0.5, 0.5, 0.5, 1.0};
+static float gobal_ambient_light[4] = {0.0, 0.0, 0.0, 0};
+static float light_ambient[4] = {0.3, 0.3, 0.3, 0.0};
+static float light_diffuse[4] = {0.5, 0.5, 0.5, 1.0};
+static float light_specular[4] = {0.5, 0.5, 0.5, 1.0};
+static float mat_shininess[] = {10.0};
+static float mat_specular[] = { 0.5, 0.5, 0.5, 1.0 };
 
-float mat_shininess[] = {10.0};
-float mat_specular[] = { 0.5, 0.5, 0.5, 1.0 };
-
-float rot_x = DEFAULT_ROTATION_X;
-float rot_y = DEFAULT_ROTATION_Y;
-float rot_z = DEFAULT_ROTATION_Z;
+static float rot_cur_quat[4];
+static float rot_last_quat[4];
+static int rot_begin_x = 0;
+static int rot_begin_y = 0;
 
 static GLuint model;
 
@@ -81,37 +85,33 @@ typedef struct {
 	GLfloat z;
 } vector_t;
 
-static void
-keyboardSpecialFunc(int key, int x, int y)
+static void 
+mouse_motion(int x, int y) 
 {
-	switch (key) {
-		case GLUT_KEY_UP:
-			rot_x -= ROTATION_FACTOR;
-			break;
+        if (rotating) {
+                trackball(rot_last_quat, 
+                         (2.0 * rot_begin_x - screen_width) / screen_width,
+                         (screen_height - 2.0 * rot_begin_y) / screen_height,
+                         (2.0 * x - screen_width) / screen_width,
+                         (screen_height - 2.0 * y) / screen_height); 
+                rot_begin_x = x;
+                rot_begin_y = y;
+                add_quats(rot_last_quat, rot_cur_quat, rot_cur_quat);
+        }
+}
 
-		case GLUT_KEY_DOWN:
-			rot_x += ROTATION_FACTOR;
-			break;
+static void
+mouse_click(int button, int state, int x, int y) 
+{
+        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+                rotating = 1;
+                rot_begin_x = x;
+                rot_begin_y = y;
+        }
 
-		case GLUT_KEY_LEFT:
-			rot_z -= ROTATION_FACTOR;
-			break;
-
-		case GLUT_KEY_RIGHT:
-			rot_z += ROTATION_FACTOR;
-			break;
-
-		case GLUT_KEY_PAGE_UP:
-			rot_y -= ROTATION_FACTOR;
-			break;
-
-		case GLUT_KEY_PAGE_DOWN:
-			rot_y += ROTATION_FACTOR;
-			break;
-
-		default:
-			break;
-	}
+        if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
+                rotating = 0;
+        }
 }
 
 static void
@@ -139,9 +139,7 @@ keyboardFunc(unsigned char key, int x, int y)
                 case 'r':
                 case 'R':
                         scale = DEFAULT_SCALE;
-                        rot_x = DEFAULT_ROTATION_X;
-                        rot_y = DEFAULT_ROTATION_Y;
-                        rot_z = DEFAULT_ROTATION_Z;
+                        trackball(rot_cur_quat, 0.0, 0.0, 0.0, 0.0);
                         zoom = DEFAULT_ZOOM;
                         break;
 		case 'q':
@@ -178,6 +176,9 @@ reshape(int width, int height)
 {
 	int size = MIN(width, height);
         GLfloat min_x, min_y, min_z, max_x, max_y, max_z;
+        
+        screen_width = width;
+        screen_height = height;
 
 	int width_half = width / 2;
 	int height_half = height / 2;
@@ -261,9 +262,9 @@ drawBox(void)
 
 	glScalef(zoom, zoom, zoom);
 
-	glRotatef(rot_x, 1, 0, 0);
-	glRotatef(rot_y, 0, 1, 0);
-	glRotatef(rot_z, 0, 0, 1);
+        GLfloat rot_matrix[4][4];
+        build_rotmatrix(rot_matrix, rot_cur_quat);
+        glMultMatrixf(&rot_matrix[0][0]);
 
 	glTranslatef(
 		-((stl_max_x(stl) + stl_min_x(stl))/2),
@@ -364,11 +365,13 @@ main(int argc, char **argv)
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutCreateWindow(argv[1]);
   glutKeyboardFunc(keyboardFunc);
-  glutSpecialFunc(keyboardSpecialFunc);
+  glutMotionFunc(mouse_motion); 
+  glutMouseFunc(mouse_click);
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
   glutIdleFunc(idle_func);
   init(argv[1]);
+  trackball(rot_cur_quat, 0.0, 0.0, 0.0, 0.0);
   glutMainLoop();
   return 0;             /* ANSI C requires main to return int. */
 }
