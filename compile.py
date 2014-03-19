@@ -33,9 +33,9 @@ if system_name == "Darwin":
 	framework_str =  ' '.join(frameworks)
 
 if system_name == "Linux":
-	compile_cmd = "gcc -Wall -o %s %s %s %s %s" % (program, include_str, defines_str, libraries_str, files_str)
+	compile_cmd = "gcc -Wall -o %s %s %s %s %s" % (program, files_str, include_str, defines_str, libraries_str)
 elif system_name == "Darwin":
-	compile_cmd = "cc -g -Wall -Wno-deprecated -o %s %s %s %s" % (program, defines_str, framework_str, files_str)
+	compile_cmd = "cc -g -Wall -Wno-deprecated -o %s %s %s %s" % (program, files_str, defines_str, framework_str)
 
 
 print compile_cmd
