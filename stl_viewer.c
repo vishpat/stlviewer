@@ -342,7 +342,7 @@ init(char *filename)
 	glEnable(GL_DEPTH_TEST);
 	glShadeModel(GL_SMOOTH);
 
-        glClearColor(135.0 / 255, 206.0 / 255.0, 250.0 / 255.0, 0.0);
+        glClearColor(0.0 / 255, 0.0 / 255.0, 0.0 / 255.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glColor3f(120.0 / 255.0 , 120.0 / 255.0, 120.0 / 255.0);
 
