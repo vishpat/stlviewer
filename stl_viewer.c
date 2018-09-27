@@ -55,6 +55,9 @@
 #define MAX_Z_ORTHO_FACTOR 20
 #define ROTATION_FACTOR 15
 
+#define DARK_BG 0, 0, 0, 0
+#define BRIGHT_BG 135.0/255.0, 206.0/255.0, 250.0/255.0, 0.0
+
 static int rotating = 0;
 static int wiremesh = 0;
 static GLfloat scale = DEFAULT_SCALE;
@@ -142,6 +145,14 @@ keyboardFunc(unsigned char key, int x, int y)
                         trackball(rot_cur_quat, 0.0, 0.0, 0.0, 0.0);
                         zoom = DEFAULT_ZOOM;
                         break;
+		case 'd':
+		case 'D':
+			glClearColor(DARK_BG);
+			break;
+		case 'b':
+		case 'B':
+			glClearColor(BRIGHT_BG);
+			break;
 		case 'q':
                 case 'Q':
 			exit(0);
