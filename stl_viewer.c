@@ -64,6 +64,7 @@ static GLfloat scale = DEFAULT_SCALE;
 static stl_t *stl;
 static float ortho_factor = 1.5;
 static float zoom = DEFAULT_ZOOM;
+static int dark_theme = 0;
 
 static int screen_width = 0;
 static int screen_height = 0;
@@ -117,6 +118,15 @@ mouse_click(int button, int state, int x, int y)
         }
 }
 
+static void toggle_dark_bg() {
+	if (dark_theme) {
+		glClearColor(DARK_BG);
+	} else {
+		glClearColor(BRIGHT_BG);
+	}
+	dark_theme = 1 - dark_theme;
+}
+
 static void
 keyboardFunc(unsigned char key, int x, int y)
 {
@@ -145,13 +155,9 @@ keyboardFunc(unsigned char key, int x, int y)
                         trackball(rot_cur_quat, 0.0, 0.0, 0.0, 0.0);
                         zoom = DEFAULT_ZOOM;
                         break;
-		case 'd':
-		case 'D':
-			glClearColor(DARK_BG);
-			break;
-		case 'b':
-		case 'B':
-			glClearColor(BRIGHT_BG);
+		case 't':
+		case 'T':
+			toggle_dark_bg();
 			break;
 		case 'q':
                 case 'Q':
@@ -181,6 +187,8 @@ ortho_dimensions(GLfloat *min_x, GLfloat *max_x,
 	*min_z = stl_min_z(stl) - MAX_Z_ORTHO_FACTOR * ortho_factor*max_diff;
 	*max_z = stl_max_z(stl) + MAX_Z_ORTHO_FACTOR * ortho_factor*max_diff;
 }
+
+
 
 static void
 reshape(int width, int height)
