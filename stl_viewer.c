@@ -55,12 +55,16 @@
 #define MAX_Z_ORTHO_FACTOR 20
 #define ROTATION_FACTOR 15
 
+#define DARK_BG 0, 0, 0, 0
+#define BRIGHT_BG 135.0/255.0, 206.0/255.0, 250.0/255.0, 0.0
+
 static int rotating = 0;
 static int wiremesh = 0;
 static GLfloat scale = DEFAULT_SCALE;
 static stl_t *stl;
 static float ortho_factor = 1.5;
 static float zoom = DEFAULT_ZOOM;
+static int dark_theme = 0;
 
 static int screen_width = 0;
 static int screen_height = 0;
@@ -114,6 +118,15 @@ mouse_click(int button, int state, int x, int y)
         }
 }
 
+static void toggle_dark_bg() {
+	if (dark_theme) {
+		glClearColor(DARK_BG);
+	} else {
+		glClearColor(BRIGHT_BG);
+	}
+	dark_theme = 1 - dark_theme;
+}
+
 static void
 keyboardFunc(unsigned char key, int x, int y)
 {
@@ -142,6 +155,10 @@ keyboardFunc(unsigned char key, int x, int y)
                         trackball(rot_cur_quat, 0.0, 0.0, 0.0, 0.0);
                         zoom = DEFAULT_ZOOM;
                         break;
+		case 't':
+		case 'T':
+			toggle_dark_bg();
+			break;
 		case 'q':
                 case 'Q':
 			exit(0);
@@ -170,6 +187,8 @@ ortho_dimensions(GLfloat *min_x, GLfloat *max_x,
 	*min_z = stl_min_z(stl) - MAX_Z_ORTHO_FACTOR * ortho_factor*max_diff;
 	*max_z = stl_max_z(stl) + MAX_Z_ORTHO_FACTOR * ortho_factor*max_diff;
 }
+
+
 
 static void
 reshape(int width, int height)
@@ -342,7 +361,7 @@ init(char *filename)
 	glEnable(GL_DEPTH_TEST);
 	glShadeModel(GL_SMOOTH);
 
-        glClearColor(135.0 / 255, 206.0 / 255.0, 250.0 / 255.0, 0.0);
+        glClearColor(0.0 / 255, 0.0 / 255.0, 0.0 / 255.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glColor3f(120.0 / 255.0 , 120.0 / 255.0, 120.0 / 255.0);
 

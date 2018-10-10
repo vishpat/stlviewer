@@ -27,4 +27,5 @@ z : Zoom in
 x : Zoom out
 w : wiremesh mode
 r : Reset the view 
+t : Toggle dark/bright theme
 Use the mouse with the left button down to rotate the object
